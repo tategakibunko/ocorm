@@ -2,8 +2,6 @@
   ocorm.mli
 
   Copyright (c) 2011- by Masaki WATANABE <lambda.watanabe@gmail.com>
-
-  Licence: GPLv3
 *)
 
 type prop_default = [
