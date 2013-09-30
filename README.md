@@ -6,8 +6,8 @@ Ocorm is functor module library to create module that can convert table rows((st
 
 ## Install
 
-make
-sudo make install
+- make
+- sudo make install
 
 ## Usage
 
