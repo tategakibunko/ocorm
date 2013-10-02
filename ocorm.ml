@@ -35,6 +35,7 @@ type prop_constraint =
 type property =
     PrimaryKeyProperty
   | StringProperty of prop_constraint list
+  | TextProperty of prop_constraint list
   | IntProperty of prop_constraint list
   | FloatProperty of prop_constraint list
   | BooleanProperty of prop_constraint list
@@ -88,6 +89,7 @@ module MakeRelationMap (F : FieldMap) (S : Schema) = struct
   let constraint_of = function
     | PrimaryKeyProperty -> []
     | StringProperty lst -> lst
+    | TextProperty lst -> lst
     | IntProperty lst -> lst
     | FloatProperty lst -> lst
     | BooleanProperty lst -> lst
@@ -169,6 +171,8 @@ module MakeRelationMap (F : FieldMap) (S : Schema) = struct
   let validate name value = 
     match find_property name with
       | StringProperty(conds) ->
+	List.iter (validate_str name value) conds
+      | TextProperty(conds) ->
 	List.iter (validate_str name value) conds
       | IntProperty(conds) ->
 	List.iter (validate_int name value) conds

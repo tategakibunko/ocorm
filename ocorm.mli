@@ -28,6 +28,7 @@ type prop_constraint =
 type property =
     PrimaryKeyProperty
   | StringProperty of prop_constraint list
+  | TextProperty of prop_constraint list
   | IntProperty of prop_constraint list
   | FloatProperty of prop_constraint list
   | BooleanProperty of prop_constraint list

@@ -11,6 +11,7 @@ module JsonFieldMap = struct
     match prop with
       | PrimaryKeyProperty -> Json_type.Int (int_of_string value)
       | StringProperty _ -> Json_type.String value
+      | TextProperty _ -> Json_type.String value
       | IntProperty _ -> if value = "" then Json_type.Null else Json_type.Int (int_of_string value)
       | FloatProperty _ -> if value = "" then Json_type.Null else Json_type.Float (float_of_string value)
       | BooleanProperty _ -> if value = "" then Json_type.Null else Json_type.Bool (bool_of_string value)

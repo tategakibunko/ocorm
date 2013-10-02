@@ -34,6 +34,7 @@ module ObjFieldMap = struct
     match property with
       | PrimaryKeyProperty -> Tint (int_of_string value)
       | StringProperty _ -> Tstr value
+      | TextProperty _ -> Tstr value
       | IntProperty _ -> Tint (int_of_string value)
       | FloatProperty _ -> Tfloat (float_of_string value)
       | BooleanProperty _ -> Tbool (value = "t")
