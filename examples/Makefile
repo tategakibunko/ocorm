@@ -1,9 +1,9 @@
-all: obj_dump json_dump
+all: obj_dump.exe json_dump.exe
 
-obj_dump: obj_dump.ml
+obj_dump.exe: obj_dump.ml
 	ocamlfind ocamlopt -g -o $@ -package camomile -linkpkg -I ../ ../ocorm.cmx schema.ml $<
 
-json_dump: json_dump.ml
+json_dump.exe: json_dump.ml
 	ocamlfind ocamlopt -g -o $@ -package camomile,json-wheel -linkpkg -I ../ ../ocorm.cmx schema.ml $<
 
 clean:

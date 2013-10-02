@@ -1,8 +1,8 @@
 PKG:=camomile,oUnit
 
-all: test_validate
+all: test_validate.exe
 
-test_validate: test_validate.ml
+test_validate.exe: test_validate.ml
 	ocamlfind ocamlopt -g -o $@ -package $(PKG) -linkpkg -I ../ ../ocorm.cmx $<
 
 clean:
