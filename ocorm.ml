@@ -30,7 +30,6 @@ type prop_constraint =
   | Max of prop_min_max
   | MaxLength of int
   | MinLength of int
-;;
 
 type property =
     PrimaryKeyProperty
@@ -39,7 +38,6 @@ type property =
   | IntProperty of prop_constraint list
   | FloatProperty of prop_constraint list
   | BooleanProperty of prop_constraint list
-;;
 
 type alias_name = string
 type field_name = string
@@ -180,4 +178,3 @@ module MakeRelationMap (F : FieldMap) (S : Schema) = struct
 	List.iter (validate_float name value) conds
       | _ -> ()
 end
-;;
