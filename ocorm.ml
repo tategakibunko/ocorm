@@ -62,6 +62,11 @@ end
 module type RelationMap = sig
   type t
 
+  val fields :
+    ?without : field_name list ->
+    unit ->
+    field_name list
+
   val objectify :
     ?joined_props:(field_name * property) list list ->
     ?alias_props:(alias_name * property) list ->
@@ -77,6 +82,12 @@ module MakeRelationMap (F : FieldMap) (S : Schema) = struct
   let map_list = F.map_list
   let map_alist = F.map_alist
   let map_value = F.map_value
+
+  let fields ?(without=[]) () =
+    List.map fst props +>
+      List.filter (fun field ->
+	List.for_all ((<>) field) without
+      )
 
   let find_property ?(joined_props=[]) ?(alias_props=[]) name =
     try List.assoc name props with Not_found ->

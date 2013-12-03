@@ -55,6 +55,11 @@ end
 module type RelationMap = sig
   type t
 
+  val fields :
+    ?without : field_name list ->
+    unit ->
+    field_name list
+
   val objectify :
     ?joined_props:(field_name * property) list list ->
     ?alias_props:(alias_name * property) list ->
