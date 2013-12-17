@@ -3,8 +3,7 @@
 
   Copyright (c) 2011- by Masaki WATANABE <lambda.watanabe@gmail.com>
 *)
-
-open CamomileLibrary
+open ExtLib
 
 let (@@) f g = f g
 let (+>) f g = g f
