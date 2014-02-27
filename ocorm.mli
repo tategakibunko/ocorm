@@ -37,7 +37,7 @@ type alias_name = string
 type field_name = string
 type field_value = string
 
-exception ValidationError of field_name * string
+exception ValidationError of string
 
 module type Schema = sig
   val table_name : string
@@ -75,5 +75,5 @@ module MakeValidateMap (S : Schema) : ValidateMap
 *)
 
 module MakeRelationMap (F : FieldMap) (S : Schema) : RelationMap with type t = F.t
-(** generate convertor that convet from Schema S to some object using FieldMap F.
+(** generate relational mapper(S to F.t).
 *)

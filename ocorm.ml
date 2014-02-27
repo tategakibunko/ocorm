@@ -42,7 +42,7 @@ type alias_name = string
 type field_name = string
 type field_value = string
 
-exception ValidationError of field_name * string
+exception ValidationError of string
 
 module type Schema = sig
   val table_name : string
@@ -99,13 +99,13 @@ module MakeValidateMap (S : Schema) = struct
     match cond with
       | MinLength(minlen) ->
 	if len < minlen then
-	  raise @@ ValidationError(name, spf "too short (min %d, now %d)" minlen len)
+	  raise @@ ValidationError(spf "%s too short (min %d, now %d)" name minlen len)
       | MaxLength(maxlen) ->
 	if len > maxlen then
-	  raise @@ ValidationError(name, spf "too long (max %d, now %d)" maxlen len)
+	  raise @@ ValidationError(spf "%s too long (max %d, now %d)" name maxlen len)
       | NotNull ->
 	if value = "" then
-	  raise @@ ValidationError(name, "empty value not allowed")
+	  raise @@ ValidationError(spf "%s empty value not allowed" name)
       | _ -> ()
 
   let validate_int name value cond = 
@@ -113,13 +113,13 @@ module MakeValidateMap (S : Schema) = struct
     match cond with
       | Min(`Int minval) ->
 	if num < minval then
-	  raise @@ ValidationError(name, spf "too small (min %d, now %d)" minval num)
+	  raise @@ ValidationError(spf "%s too small (min %d, now %d)" name minval num)
       | Max(`Int maxval) ->
 	if num > maxval then
-	  raise @@ ValidationError(name, spf "too large (max %d, now %d)" maxval num)
+	  raise @@ ValidationError(spf "%s too large (max %d, now %d)" name maxval num)
       | NotNull ->
 	if value = "" then
-	  raise @@ ValidationError(name, "empty value not allowed")
+	  raise @@ ValidationError(spf "%s empty value not allowed" name)
       | _ -> ()
 
   let validate_float name value cond =
@@ -127,13 +127,13 @@ module MakeValidateMap (S : Schema) = struct
     match cond with
       | Min(`Float minval) ->
 	if num < minval then
-	  raise @@ ValidationError(name, spf "too small (min %f, now %f)" minval num)
+	  raise @@ ValidationError(spf "%s too small (min %f, now %f)" name minval num)
       | Max(`Float maxval) ->
 	if num > maxval then
-	  raise @@ ValidationError(name, spf "too large (max %f, now %f)" maxval num)
+	  raise @@ ValidationError(spf "%s too large (max %f, now %f)" name maxval num)
       | NotNull ->
 	if value = "" then
-	  raise @@ ValidationError(name, "empty value not allowed")
+	  raise @@ ValidationError(spf "%s empty value not allowed" name)
       | _ -> ()
 
   let validate name value = 
