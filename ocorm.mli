@@ -52,6 +52,10 @@ module type FieldMap = sig
   val map_list : t list -> t
 end
 
+module type ValidateMap = sig
+  val validate : field_name -> field_value -> unit
+end
+
 module type RelationMap = sig
   type t
 
@@ -64,13 +68,12 @@ module type RelationMap = sig
     ?joined_props:(field_name * property) list list ->
     ?alias_props:(alias_name * property) list ->
     (field_name * field_value) list -> t
-
-  val validate : field_name -> field_value -> unit
 end
 
+module MakeValidateMap (S : Schema) : ValidateMap
+(** generate validator for Schema
+*)
 
 module MakeRelationMap (F : FieldMap) (S : Schema) : RelationMap with type t = F.t
-(** Functor building an implementation of the model structure
-    given a field mapper(map_value, map_alist, map_list)
-    and schema definitions(table_name, props)
+(** generate convertor that convet from Schema S to some object using FieldMap F.
 *)

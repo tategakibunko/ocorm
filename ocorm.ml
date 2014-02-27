@@ -56,7 +56,10 @@ module type FieldMap = sig
   val map_alist : (field_name * t) list -> t
   val map_list : t list -> t
 end
-;;
+
+module type ValidateMap = sig
+  val validate : field_name -> field_value -> unit
+end
 
 module type RelationMap = sig
   type t
@@ -70,8 +73,80 @@ module type RelationMap = sig
     ?joined_props:(field_name * property) list list ->
     ?alias_props:(alias_name * property) list ->
     (field_name * field_value) list -> t
+end
 
-  val validate : field_name -> field_value -> unit
+let find_property ?(table_name="") ?(joined_props=[]) ?(alias_props=[]) name props =
+  try List.assoc name props with Not_found ->
+    (try List.assoc name @@ List.concat joined_props with Not_found ->
+      (try List.assoc name alias_props with Not_found ->
+	failwith (spf "property %s is not defined in %s" name table_name)))
+
+(**
+   (name, value) -> (name, value, property) 
+*)
+let append_property ?(table_name="") ?(joined_props=[]) ?(alias_props=[]) ?(table_name="") ?(props=[]) fields =
+  List.map (fun (name, value) ->
+    let property = find_property name props ~joined_props ~alias_props ~table_name in
+    (name, value, property)
+  ) fields
+
+module MakeValidateMap (S : Schema) = struct
+  let table_name = S.table_name
+  let props = S.props
+
+  let validate_str name value cond =
+    let len = UTF8.length value in
+    match cond with
+      | MinLength(minlen) ->
+	if len < minlen then
+	  raise @@ ValidationError(name, spf "too short (min %d, now %d)" minlen len)
+      | MaxLength(maxlen) ->
+	if len > maxlen then
+	  raise @@ ValidationError(name, spf "too long (max %d, now %d)" maxlen len)
+      | NotNull ->
+	if value = "" then
+	  raise @@ ValidationError(name, "empty value not allowed")
+      | _ -> ()
+
+  let validate_int name value cond = 
+    let num = int_of_string value in
+    match cond with
+      | Min(`Int minval) ->
+	if num < minval then
+	  raise @@ ValidationError(name, spf "too small (min %d, now %d)" minval num)
+      | Max(`Int maxval) ->
+	if num > maxval then
+	  raise @@ ValidationError(name, spf "too large (max %d, now %d)" maxval num)
+      | NotNull ->
+	if value = "" then
+	  raise @@ ValidationError(name, "empty value not allowed")
+      | _ -> ()
+
+  let validate_float name value cond =
+    let num = float_of_string value in
+    match cond with
+      | Min(`Float minval) ->
+	if num < minval then
+	  raise @@ ValidationError(name, spf "too small (min %f, now %f)" minval num)
+      | Max(`Float maxval) ->
+	if num > maxval then
+	  raise @@ ValidationError(name, spf "too large (max %f, now %f)" maxval num)
+      | NotNull ->
+	if value = "" then
+	  raise @@ ValidationError(name, "empty value not allowed")
+      | _ -> ()
+
+  let validate name value = 
+    match find_property name props ~table_name with
+      | StringProperty(conds) ->
+	List.iter (validate_str name value) conds
+      | TextProperty(conds) ->
+	List.iter (validate_str name value) conds
+      | IntProperty(conds) ->
+	List.iter (validate_int name value) conds
+      | FloatProperty(conds) ->
+	List.iter (validate_float name value) conds
+      | _ -> ()
 end
 
 module MakeRelationMap (F : FieldMap) (S : Schema) = struct
@@ -87,12 +162,6 @@ module MakeRelationMap (F : FieldMap) (S : Schema) = struct
       List.filter (fun field ->
 	List.for_all ((<>) field) without
       )
-
-  let find_property ?(joined_props=[]) ?(alias_props=[]) name =
-    try List.assoc name props with Not_found ->
-      (try List.assoc name @@ List.concat joined_props with Not_found ->
-	(try List.assoc name alias_props with Not_found ->
-	  failwith (spf "property %s is not defined in %s" name table_name)))
 
   let constraint_of = function
     | PrimaryKeyProperty -> []
@@ -119,72 +188,10 @@ module MakeRelationMap (F : FieldMap) (S : Schema) = struct
 	| [] -> "null" in
       iter constr
 
-  (* (name, value) -> (name, value, property) *)
-  let append_property ?(joined_props=[]) ?(alias_props=[]) fields =
-    List.map (fun (name, value) ->
-      (name, value, find_property name ~joined_props ~alias_props)
-    ) fields
-
   let objectify ?(joined_props=[]) ?(alias_props=[]) nv_alist =
-    append_property nv_alist ~joined_props ~alias_props +>
+    append_property nv_alist ~joined_props ~alias_props ~table_name ~props +>
       List.map (fun (name, value, prop) ->
 	name, map_value prop value
       ) +> map_alist
 
-  let error field_name msg =
-    raise @@ ValidationError(field_name, msg)
-
-  let validate_str name value cond =
-    let len = UTF8.length value in
-    match cond with
-      | MinLength(minlen) ->
-	if len < minlen then
-	  error name @@ spf "too short (min %d, now %d)" minlen len
-      | MaxLength(maxlen) ->
-	if len > maxlen then
-	  error name @@ spf "too long (max %d, now %d)" maxlen len
-      | NotNull ->
-	if value = "" then
-	  error name "empty value not allowed"
-      | _ -> ()
-
-  let validate_int name value cond = 
-    let num = int_of_string value in
-    match cond with
-      | Min(`Int minval) ->
-	if num < minval then
-	  error name @@ spf "too small (min %d, now %d)" minval num
-      | Max(`Int maxval) ->
-	if num > maxval then
-	  error name @@ spf "too large (max %d, now %d)" maxval num
-      | NotNull ->
-	if value = "" then
-	  error name "empty value not allowed"
-      | _ -> ()
-
-  let validate_float name value cond =
-    let num = float_of_string value in
-    match cond with
-      | Min(`Float minval) ->
-	if num < minval then
-	  error name @@ spf "too small (min %f, now %f)" minval num
-      | Max(`Float maxval) ->
-	if num > maxval then
-	  error name @@ spf "too large (max %f, now %f)" maxval num
-      | NotNull ->
-	if value = "" then
-	  error name "empty value not allowed"
-      | _ -> ()
-
-  let validate name value = 
-    match find_property name with
-      | StringProperty(conds) ->
-	List.iter (validate_str name value) conds
-      | TextProperty(conds) ->
-	List.iter (validate_str name value) conds
-      | IntProperty(conds) ->
-	List.iter (validate_int name value) conds
-      | FloatProperty(conds) ->
-	List.iter (validate_float name value) conds
-      | _ -> ()
 end
