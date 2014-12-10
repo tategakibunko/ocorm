@@ -24,6 +24,7 @@ type prop_constraint =
   | Max of prop_min_max
   | MaxLength of int
   | MinLength of int
+  | StringChoices of string list
 
 type property =
     PrimaryKeyProperty

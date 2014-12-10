@@ -29,6 +29,7 @@ type prop_constraint =
   | Max of prop_min_max
   | MaxLength of int
   | MinLength of int
+  | StringChoices of string list
 
 type property =
     PrimaryKeyProperty
@@ -99,6 +100,9 @@ module MakeValidateMap (S : Schema) = struct
   let validate_str name value cond =
     let len = UTF8.length value in
     match cond with
+      | StringChoices(choices) ->
+	if List.exists ((=) value) choices = false then
+	  raise @@ ValidationError(spf "%s is not available value for %s" value name)
       | MinLength(minlen) ->
 	if len < minlen then
 	  raise @@ ValidationError(spf "%s too short (min %d, now %d)" name minlen len)
