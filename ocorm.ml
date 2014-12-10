@@ -42,11 +42,13 @@ type alias_name = string
 type field_name = string
 type field_value = string
 
+type attribute = field_name * property
+
 exception ValidationError of string
 
 module type Schema = sig
   val table_name : string
-  val props : (field_name * property) list
+  val props : attribute list
 end
 
 module type FieldMap = sig
@@ -70,8 +72,8 @@ module type RelationMap = sig
     field_name list
 
   val objectify :
-    ?joined_props:(field_name * property) list list ->
-    ?alias_props:(alias_name * property) list ->
+    ?joined_props:attribute list list ->
+    ?alias_props:attribute list ->
     (field_name * field_value) list -> t
 end
 
