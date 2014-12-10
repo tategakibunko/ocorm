@@ -76,18 +76,18 @@ module type RelationMap = sig
 end
 
 let find_property ?(table_name="") ?(joined_props=[]) ?(alias_props=[]) name props =
-  try List.assoc name props with Not_found ->
-    (try List.assoc name @@ List.concat joined_props with Not_found ->
-      (try List.assoc name alias_props with Not_found ->
-	failwith (spf "property %s is not defined in %s" name table_name)))
+  try Some (List.assoc name props) with Not_found ->
+    (try Some (List.assoc name @@ List.concat joined_props) with Not_found ->
+      (try Some (List.assoc name alias_props) with Not_found -> None))
 
 (**
    (name, value) -> (name, value, property) 
 *)
 let append_property ?(table_name="") ?(joined_props=[]) ?(alias_props=[]) ?(table_name="") ?(props=[]) fields =
   List.map (fun (name, value) ->
-    let property = find_property name props ~joined_props ~alias_props ~table_name in
-    (name, value, property)
+    match find_property name props ~joined_props ~alias_props ~table_name with
+      | Some property -> (name, value, property)
+      | None -> failwith (spf "property %s not found" name)
   ) fields
 
 module MakeValidateMap (S : Schema) = struct
@@ -136,17 +136,21 @@ module MakeValidateMap (S : Schema) = struct
 	  raise @@ ValidationError(spf "%s empty value not allowed" name)
       | _ -> ()
 
-  let validate name value = 
+  let validate_property name value = function
+    | StringProperty(conds) ->
+      List.iter (validate_str name value) conds
+    | TextProperty(conds) ->
+      List.iter (validate_str name value) conds
+    | IntProperty(conds) ->
+      List.iter (validate_int name value) conds
+    | FloatProperty(conds) ->
+      List.iter (validate_float name value) conds
+    | _ -> ()
+
+  let validate name value =
     match find_property name props ~table_name with
-      | StringProperty(conds) ->
-	List.iter (validate_str name value) conds
-      | TextProperty(conds) ->
-	List.iter (validate_str name value) conds
-      | IntProperty(conds) ->
-	List.iter (validate_int name value) conds
-      | FloatProperty(conds) ->
-	List.iter (validate_float name value) conds
-      | _ -> ()
+      | Some property -> validate_property name value property
+      | None -> ()
 end
 
 module MakeRelationMap (F : FieldMap) (S : Schema) = struct
