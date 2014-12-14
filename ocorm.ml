@@ -76,6 +76,11 @@ module type RelationMap = sig
     ?joined_props:attribute list list ->
     ?alias_props:attribute list ->
     (field_name * field_value) list -> t
+
+  val objectify_many :
+    ?joined_props:(field_name * property) list list ->
+    ?alias_props:(alias_name * property) list ->
+    (field_name * field_value) list list -> t
 end
 
 let find_property ?(table_name="") ?(joined_props=[]) ?(alias_props=[]) name props =
@@ -204,4 +209,6 @@ module MakeRelationMap (F : FieldMap) (S : Schema) = struct
 	name, map_value prop value
       ) +> map_alist
 
+  let objectify_many ?(joined_props=[]) ?(alias_props=[]) nv_alist_list =
+    map_list @@ List.map (objectify ~joined_props ~alias_props) nv_alist_list
 end
