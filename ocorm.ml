@@ -107,16 +107,16 @@ module MakeValidateMap (S : Schema) = struct
     match cond with
       | StringChoices(choices) ->
 	if List.exists ((=) value) choices = false then
-	  raise @@ ValidationError(spf "%s is not available value for %s" value name)
+	  raise @@ ValidationError(spf "%s is not available value for %s.%s" value table_name name)
       | MinLength(minlen) ->
 	if len < minlen then
-	  raise @@ ValidationError(spf "%s too short (min %d, now %d)" name minlen len)
+	  raise @@ ValidationError(spf "%s.%s too short (min %d, now %d)" table_name name minlen len)
       | MaxLength(maxlen) ->
 	if len > maxlen then
-	  raise @@ ValidationError(spf "%s too long (max %d, now %d)" name maxlen len)
+	  raise @@ ValidationError(spf "%s.%s too long (max %d, now %d)" table_name name maxlen len)
       | NotNull ->
 	if value = "" then
-	  raise @@ ValidationError(spf "%s empty value not allowed" name)
+	  raise @@ ValidationError(spf "%s.%s empty value not allowed" table_name name)
       | _ -> ()
 
   let validate_int name value cond = 
