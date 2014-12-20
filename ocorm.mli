@@ -66,12 +66,12 @@ module type RelationMap = sig
     field_name list
 
   val objectify :
-    ?joined_props:(field_name * property) list list ->
+    ?joined_props:(field_name * property) list ->
     ?alias_props:(alias_name * property) list ->
     (field_name * field_value) list -> t
 
   val objectify_many :
-    ?joined_props:(field_name * property) list list ->
+    ?joined_props:(field_name * property) list ->
     ?alias_props:(alias_name * property) list ->
     (field_name * field_value) list list -> t
 end
