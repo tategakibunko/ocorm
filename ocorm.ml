@@ -3,7 +3,6 @@
 
   Copyright (c) 2011- by Masaki WATANABE <lambda.watanabe@gmail.com>
 *)
-open ExtLib
 
 let (@@) f g = f g
 let (+>) f g = g f
@@ -103,7 +102,7 @@ module MakeValidateMap (S : Schema) = struct
   let props = S.props
 
   let validate_str name value cond =
-    let len = UTF8.length value in
+    let len = BatUTF8.length value in
     match cond with
       | StringChoices(choices) ->
 	if List.exists ((=) value) choices = false then
