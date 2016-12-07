@@ -1,7 +1,7 @@
 LIBNAME:=ocorm
 OPT:=ocamlfind ocamlopt -g
 OCAMLC:=ocamlfind ocamlc -g 
-PKG:=batteries
+PKG:=uutf
 LIBSRC:=\
 	ocorm.mli ocorm.ml
 

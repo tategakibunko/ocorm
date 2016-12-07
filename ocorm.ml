@@ -97,12 +97,34 @@ let append_property ?(table_name="") ?(joined_props=[]) ?(alias_props=[]) ?(tabl
       | None -> failwith (spf "property %s not found" name)
   ) fields
 
+module UTF8 = struct
+  let string_to_list s =
+    Uutf.String.fold_utf_8 (fun acc _ c -> c :: acc) [] s
+    +> List.rev
+
+  let length s = Uutf.String.fold_utf_8 (fun acc _ _ -> acc + 1) 0 s
+
+  let compare = String.compare
+
+  let sub s off len =
+    let buf = Buffer.create 0 in
+    let encoder = Uutf.encoder `UTF_8 (`Buffer buf) in
+    let uchar_array = string_to_list s +> Array.of_list in
+    let sub_array = Array.sub uchar_array off len in
+    Array.iter (function
+        | `Malformed s -> Buffer.add_string buf s
+        | `Uchar _ as u -> ignore @@ Uutf.encode encoder u
+      ) sub_array;
+    ignore @@ Uutf.encode encoder `End;
+    Buffer.contents buf
+end
+
 module MakeValidateMap (S : Schema) = struct
   let table_name = S.table_name
   let props = S.props
 
   let validate_str name value cond =
-    let len = BatUTF8.length value in
+    let len = UTF8.length value in
     match cond with
       | StringChoices(choices) ->
 	if List.exists ((=) value) choices = false then
